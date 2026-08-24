@@ -97,7 +97,7 @@ const initialFinanceSettings: FinanceSettings = {
 };
 
 export const useStore = create<AppState>((set, get) => ({
-  currentUser: null,
+  currentUser: (typeof window !== 'undefined' && JSON.parse(localStorage.getItem('nexus_user') || 'null')) || null,
   organization: { id: MOCK_ORG_ID, name: 'Nexus Workspace' },
   users: [],
   clients: [],
@@ -115,9 +115,19 @@ export const useStore = create<AppState>((set, get) => ({
   theme: (typeof window !== 'undefined' && localStorage.getItem('theme') as 'light' | 'dark') || 'light',
   dismissedNotifications: (typeof window !== 'undefined' && JSON.parse(localStorage.getItem('dismissedNotifications') || '[]')) || [],
 
-  login: (user) => set({ currentUser: user }),
+  login: (user) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('nexus_user', JSON.stringify(user));
+    }
+    set({ currentUser: user });
+  },
   
-  logout: () => set({ currentUser: null }),
+  logout: () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('nexus_user');
+    }
+    set({ currentUser: null });
+  },
 
   setTheme: (theme) => {
     localStorage.setItem('theme', theme);

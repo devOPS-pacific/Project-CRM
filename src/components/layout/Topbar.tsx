@@ -4,8 +4,6 @@ import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { useStore } from '../../store/useStore';
 import { useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { auth } from '../../firebase';
 
 import { QuickAdd } from '../QuickAdd';
 
@@ -37,12 +35,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (e) {
-      console.error('Signout error:', e);
-    }
+  const handleLogout = () => {
     logout();
     navigate('/login');
   };

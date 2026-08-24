@@ -1,73 +1,78 @@
 import React, { useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { 
+  doc, 
+  getDoc, 
+  setDoc, 
+  onSnapshot, 
+  collection, 
+  getDocs, 
+  query, 
+  where 
+} from 'firebase/firestore';
+import { db } from '../firebase';
 import { useStore } from '../store/useStore';
 import { handleFirestoreError, OperationType } from '../lib/firestore-error';
 
 export function FirebaseProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthReady, setIsAuthReady] = useState(false);
-  const { login, logout } = useStore();
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    async function testConnection() {
+    async function initFirestore() {
       try {
-        await getDoc(doc(db, 'test', 'connection'));
-      } catch (error) {
-        if (error instanceof Error && error.message.includes('the client is offline')) {
-          console.error("Please check your Firebase configuration.");
+        // Ensure default organization exists
+        const orgDoc = await getDoc(doc(db, 'organizations', 'org-1'));
+        if (!orgDoc.exists()) {
+          await setDoc(doc(db, 'organizations', 'org-1'), {
+            id: 'org-1',
+            name: 'Nexus Workspace',
+            createdAt: new Date().toISOString()
+          });
         }
+
+        // Seed default demo accounts if not already present
+        const usersRef = collection(db, 'users');
+        const adminQuery = query(usersRef, where('email', '==', 'admin@nexus.io'));
+        const adminSnap = await getDocs(adminQuery);
+        if (adminSnap.empty) {
+          await setDoc(doc(db, 'users', 'user-admin-1'), {
+            id: 'user-admin-1',
+            email: 'admin@nexus.io',
+            password: 'password123',
+            name: 'Admin User',
+            role: 'admin',
+            organizationId: 'org-1',
+            hourlyRate: 150,
+            createdAt: new Date().toISOString()
+          });
+        }
+
+        const memberQuery = query(usersRef, where('email', '==', 'member@nexus.io'));
+        const memberSnap = await getDocs(memberQuery);
+        if (memberSnap.empty) {
+          await setDoc(doc(db, 'users', 'user-member-1'), {
+            id: 'user-member-1',
+            email: 'member@nexus.io',
+            password: 'password123',
+            name: 'Team Member',
+            role: 'member',
+            organizationId: 'org-1',
+            hourlyRate: 85,
+            createdAt: new Date().toISOString()
+          });
+        }
+      } catch (error) {
+        console.warn('Initial Firestore setup or check warning:', error);
+      } finally {
+        setIsReady(true);
       }
     }
-    testConnection();
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          // Check if user exists in Firestore by email
-          const usersRef = collection(db, 'users');
-          const q = query(usersRef, where('email', '==', user.email || ''));
-          const querySnapshot = await getDocs(q);
-          
-          let userData;
-          if (!querySnapshot.empty) {
-            const userDoc = querySnapshot.docs[0];
-            userData = userDoc.data();
-            if (!userData.uid) {
-              await updateDoc(userDoc.ref, { uid: user.uid });
-              userData.uid = user.uid;
-            }
-          } else {
-            // Create new user
-            const userRef = doc(db, 'users', user.uid);
-            userData = {
-              id: user.uid,
-              uid: user.uid,
-              email: user.email || '',
-              name: user.displayName || 'New User',
-              role: 'member',
-              organizationId: 'org-1', // Default org
-              hourlyRate: 100,
-            };
-            await setDoc(userRef, userData);
-          }
-          
-          login(userData as any); // Update local store
-        } catch (error) {
-          handleFirestoreError(error, OperationType.GET, 'users');
-        }
-      } else {
-        logout();
-      }
-      setIsAuthReady(true);
-    });
+    initFirestore();
+  }, []);
 
-    return () => unsubscribe();
-  }, [login, logout]);
-
-  // Sync data from Firestore to local store
+  // Sync data from Firestore to local store in real-time
   useEffect(() => {
-    if (!isAuthReady || !auth.currentUser) return;
+    if (!isReady) return;
 
     const unsubscribes: (() => void)[] = [];
 
@@ -76,10 +81,6 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
       onSnapshot(doc(db, 'organizations', 'org-1'), (docSnapshot) => {
         if (docSnapshot.exists()) {
           useStore.setState({ organization: { id: docSnapshot.id, ...docSnapshot.data() } as any });
-        } else {
-          // Initialize organization if it doesn't exist
-          setDoc(doc(db, 'organizations', 'org-1'), { name: 'Nexus Demo Workspace' })
-            .catch(error => handleFirestoreError(error, OperationType.CREATE, 'organizations/org-1'));
         }
       }, (error) => handleFirestoreError(error, OperationType.GET, 'organizations/org-1'))
     );
@@ -98,6 +99,14 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
         const clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
         useStore.setState({ clients });
       }, (error) => handleFirestoreError(error, OperationType.LIST, 'clients'))
+    );
+
+    // Sync contacts
+    unsubscribes.push(
+      onSnapshot(collection(db, 'contacts'), (snapshot) => {
+        const contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+        useStore.setState({ contacts });
+      }, (error) => handleFirestoreError(error, OperationType.LIST, 'contacts'))
     );
 
     // Sync projects
@@ -185,10 +194,15 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     return () => {
       unsubscribes.forEach(unsub => unsub());
     };
-  }, [isAuthReady]);
+  }, [isReady]);
 
-  if (!isAuthReady) {
-    return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Loading...</div>;
+  if (!isReady) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
+        <div className="h-8 w-8 border-3 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-sm text-muted-foreground font-medium">Loading workspace...</p>
+      </div>
+    );
   }
 
   return <>{children}</>;
