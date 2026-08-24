@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  :root {
+    --background: #ffffff;
+    --foreground: #211f54;
+    --card: #ffffff;
+    --card-foreground: #211f54;
+    --popover: #ffffff;
+    --popover-foreground: #211f54;
+    --primary: #4a3aff;
+    --primary-foreground: #ffffff;
+    --secondary: #f2f1ff;
+    --secondary-foreground: #211f54;
+    --muted: #f7f7fc;
+    --muted-foreground: #6e7191;
+    --accent: #f2f1ff;
+    --accent-foreground: #211f54;
+    --destructive: #dc2b2b;
+    --destructive-foreground: #ffffff;
+    --border: #dcddeb;
+    --input: #dcddeb;
+    --ring: #4a3aff;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: #080066;
+    --foreground: #f7f7fc;
+    --card: #211f54;
+    --card-foreground: #f7f7fc;
+    --popover: #211f54;
+    --popover-foreground: #f7f7fc;
+    --primary: #766cff;
+    --primary-foreground: #ffffff;
+    --secondary: #231a97;
+    --secondary-foreground: #f7f7fc;
+    --muted: #4e4775;
+    --muted-foreground: #a0a3bd;
+    --accent: #3324d5;
+    --accent-foreground: #f7f7fc;
+    --destructive: #dc2b2b;
+    --destructive-foreground: #ffffff;
+    --border: #4e4775;
+    --input: #4e4775;
+    --ring: #766cff;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

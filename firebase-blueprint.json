@@ -1,0 +1,270 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the application",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "manager", "member"] },
+        "organizationId": { "type": "string" },
+        "hourlyRate": { "type": "number" },
+        "uid": { "type": "string" }
+      },
+      "required": ["email", "name", "role", "organizationId"]
+    },
+    "Organization": {
+      "title": "Organization",
+      "description": "A workspace organization",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "logoUrl": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "Client": {
+      "title": "Client",
+      "description": "A client organization",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "industry": { "type": "string" },
+        "website": { "type": "string" },
+        "billingAddress": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "organizationId", "createdAt"]
+    },
+    "Contact": {
+      "title": "Contact",
+      "description": "A contact person at a client",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "name": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "title": { "type": "string" }
+      },
+      "required": ["clientId", "name"]
+    },
+    "Deal": {
+      "title": "Deal",
+      "description": "A sales deal",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "name": { "type": "string" },
+        "value": { "type": "number" },
+        "stage": { "type": "string", "enum": ["lead", "contacted", "proposal", "negotiation", "won", "lost"] },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "name", "value", "stage", "ownerId", "createdAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A project",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "clientId": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "completed", "on_hold"] },
+        "budget": { "type": "number" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "status", "organizationId", "createdAt"]
+    },
+    "Board": {
+      "title": "Board",
+      "description": "A task board for a project",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "required": ["projectId", "name"]
+    },
+    "BoardGroup": {
+      "title": "Board Group",
+      "description": "A group/column in a board",
+      "type": "object",
+      "properties": {
+        "boardId": { "type": "string" },
+        "name": { "type": "string" },
+        "color": { "type": "string" }
+      },
+      "required": ["boardId", "name", "color"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A task in a board group",
+      "type": "object",
+      "properties": {
+        "groupId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["todo", "in_progress", "done"] },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "assigneeId": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["groupId", "title", "status", "priority", "createdAt"]
+    },
+    "TimeEntry": {
+      "title": "Time Entry",
+      "description": "A logged time entry",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "hours": { "type": "number" },
+        "description": { "type": "string" },
+        "billable": { "type": "boolean" }
+      },
+      "required": ["projectId", "userId", "date", "hours", "billable"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "An invoice",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "projectId": { "type": "string" },
+        "number": { "type": "string" },
+        "issueDate": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "description": { "type": "string" },
+              "quantity": { "type": "number" },
+              "rate": { "type": "number" },
+              "amount": { "type": "number" }
+            },
+            "required": ["id", "description", "quantity", "rate", "amount"]
+          }
+        },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["draft", "sent", "paid", "overdue"] },
+        "sentToEmail": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "number", "issueDate", "dueDate", "items", "total", "status", "createdAt"]
+    },
+    "ResourceAllocation": {
+      "title": "Resource Allocation",
+      "description": "A user's time allocation to a project",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "projectId": { "type": "string" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "hoursPerWeek": { "type": "number" }
+      },
+      "required": ["userId", "projectId", "startDate", "endDate", "hoursPerWeek"]
+    },
+    "InvoiceTemplate": {
+      "title": "Invoice Template",
+      "description": "Default settings for invoices",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "companyAddress": { "type": "string" },
+        "taxId": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "defaultDueDays": { "type": "number" },
+        "notes": { "type": "string" },
+        "footer": { "type": "string" }
+      },
+      "required": ["companyName", "companyAddress", "defaultDueDays", "notes", "footer"]
+    },
+    "GoogleAuth": {
+      "title": "Google Auth",
+      "description": "User Google OAuth tokens for Drive and Calendar access",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "accessToken": { "type": "string" },
+        "refreshToken": { "type": "string" },
+        "expiryDate": { "type": "number" },
+        "scope": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "accessToken", "refreshToken", "expiryDate", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/organizations/{organizationId}": {
+      "schema": { "$ref": "#/entities/Organization" },
+      "description": "Organizations"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "/googleAuth/{userId}": {
+      "schema": { "$ref": "#/entities/GoogleAuth" },
+      "description": "Google Auth tokens for users"
+    },
+    "/clients/{clientId}": {
+      "schema": { "$ref": "#/entities/Client" },
+      "description": "Clients"
+    },
+    "/contacts/{contactId}": {
+      "schema": { "$ref": "#/entities/Contact" },
+      "description": "Contacts"
+    },
+    "/deals/{dealId}": {
+      "schema": { "$ref": "#/entities/Deal" },
+      "description": "Deals"
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Projects"
+    },
+    "/boards/{boardId}": {
+      "schema": { "$ref": "#/entities/Board" },
+      "description": "Boards"
+    },
+    "/boardGroups/{groupId}": {
+      "schema": { "$ref": "#/entities/BoardGroup" },
+      "description": "Board Groups"
+    },
+    "/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "Tasks"
+    },
+    "/timeEntries/{entryId}": {
+      "schema": { "$ref": "#/entities/TimeEntry" },
+      "description": "Time Entries"
+    },
+    "/invoices/{invoiceId}": {
+      "schema": { "$ref": "#/entities/Invoice" },
+      "description": "Invoices"
+    },
+    "/allocations/{allocationId}": {
+      "schema": { "$ref": "#/entities/ResourceAllocation" },
+      "description": "Resource allocations"
+    },
+    "/settings/invoiceTemplate": {
+      "schema": { "$ref": "#/entities/InvoiceTemplate" },
+      "description": "Invoice template settings"
+    }
+  }
+}
